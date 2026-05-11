@@ -1,0 +1,29 @@
+# Python 虚拟环境
+.venv/
+venv/
+
+# Python 编译产物
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+
+# IDE / 编辑器
+.vscode/
+.idea/
+*.iml
+
+# 本地数据与缓存
+data/
+.files
+*.log
+.DS_Store
+Thumbs.db
+
+# 环境与配置（本地敏感信息）
+.env
+.env.*

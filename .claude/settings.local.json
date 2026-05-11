@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:pypi.org)",
+      "Bash(claude mcp *)",
+      "WebFetch(domain:docs.langchain.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(python -c \"from utils.paths import data_paths; print\\('paths OK'\\); print\\('Root:', data_paths.root\\); print\\('Req dir:', data_paths.shared_req_dir\\(\\)\\)\")",
+      "Bash(python -X utf8 -c \"import ast; ast.parse\\(open\\('test_scenario.py', encoding='utf-8'\\).read\\(\\)\\); print\\('Syntax OK'\\)\")",
+      "Bash(python -X utf8 -c \"from tools.entity_store import entity_store, init_db; init_db\\(\\); print\\('entity_store OK'\\); from tools.read_docx import read_docx; print\\('read_docx OK'\\)\")",
+      "Bash(pip show *)",
+      "Bash(python *)",
+      "Bash(python -X utf8 -c ' *)",
+      "Bash(pip list *)",
+      "Bash(pip install *)",
+      "Bash(C:/Users/admin/.conda/envs/py312/python.exe *)",
+      "mcp__docs-langchain__search_docs_by_lang_chain",
+      "mcp__docs-langchain__query_docs_filesystem_docs_by_lang_chain"
+    ]
+  }
+}

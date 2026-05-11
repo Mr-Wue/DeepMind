@@ -10,7 +10,7 @@ Usage in deepagents::
 
     agent = create_deep_agent(
         model=model,
-        tools=[read_docx, entity_store, create_sql_query_tool()],
+        tools=[read_docx, store_entities, create_sql_query_tool()],
     )
 """
 

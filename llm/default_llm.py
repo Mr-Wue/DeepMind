@@ -49,6 +49,6 @@ class DefaultLLM(BaseLLM):
             max_retries=1,
             temperature=temperature,
             max_tokens=8192,
-            streaming=False,
+            streaming=True,
             extra_body=_build_extra_body(model),
         )

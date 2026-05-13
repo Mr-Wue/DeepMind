@@ -376,13 +376,17 @@ def parse_docx_outline(file_path: str, heading_styles: str = "Heading") -> str:
         heading_styles: Comma-separated heading style prefixes.
                         Default \"Heading\". Use \"Heading,FAI\" for custom styles.
     """
+    print(f"[parse_docx_outline] 读取文件: {file_path}")
     path = Path(file_path)
     if not path.exists():
         return json.dumps({"error": f"File not found: {file_path}"}, ensure_ascii=False)
 
     styles = tuple(h.strip() for h in heading_styles.split(",") if h.strip()) or ("Heading",)
     outline = extract_outline(str(path), heading_styles=styles)
+    print(f"[parse_docx_outline] 结构提取完成: {outline['stats']}")
     llm_structure = build_structure_for_llm(outline)
+    print(f"[parse_docx_outline] LLM 结构: {len(llm_structure.get('groups', []))} 个分组, "
+          f"{len(llm_structure.get('paragraphs_lookup', {}))} 个正文段落")
 
     return json.dumps({
         "title": outline["title"],

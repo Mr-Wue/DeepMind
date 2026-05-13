@@ -1,0 +1,10 @@
+[project]
+name = "DeepMind"
+description = "需求管理智能助手"
+
+[ui]
+theme = "dark"
+name = "DeepMind"
+
+[server]
+port = 8000

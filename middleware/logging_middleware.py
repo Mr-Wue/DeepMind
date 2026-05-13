@@ -19,7 +19,9 @@ from uuid import UUID
 from langchain.agents.middleware import AgentMiddleware, AgentState
 from langchain.messages import AIMessage, ToolMessage
 from langchain_core.callbacks import BaseCallbackHandler
+from langgraph.config import get_config
 from langgraph.runtime import Runtime
+from utils.paths import data_paths
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +35,14 @@ def _ts() -> str:
 
 
 def _p(line: str = "") -> None:
-    """Print with log prefix."""
-    print(f"{_PFX} {line}" if line else "")
+    """Print with log prefix. 安全写入 stdout，忽略编码错误。"""
+    if not line:
+        print()
+        return
+    try:
+        print(f"{_PFX} {line}")
+    except UnicodeEncodeError:
+        print(f"{_PFX} {line.encode('ascii', errors='replace').decode('ascii')}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -58,9 +66,9 @@ class InvocationLoggingHandler(BaseCallbackHandler):
         )
     """
 
-    def __init__(self, log_dir: str = "data/logs") -> None:
+    def __init__(self, log_dir: str | None = None) -> None:
         super().__init__()
-        self._log_dir = Path(log_dir)
+        self._log_dir = Path(log_dir) if log_dir else data_paths.logs_dir()
         self._log_dir.mkdir(parents=True, exist_ok=True)
         self._start: float = 0.0
         self._record: dict[str, Any] = {}
@@ -111,11 +119,15 @@ class InvocationLoggingHandler(BaseCallbackHandler):
         # outputs can be str or dict depending on LangChain version / graph type
         out_dict: dict[str, Any] = outputs if isinstance(outputs, dict) else {}
 
-        # Collect tool results
-        self._record["tool_executions"] = list(self._tool_runs.values())
+        # Collect tool results from callback trackers + state collection
+        state_executions = self._record.get("tool_executions", [])
+        callback_executions = list(self._tool_runs.values())
+        # Merge: callback trackers take priority, state appends
+        merged_executions = callback_executions + [e for e in state_executions if e not in callback_executions]
+        self._record["tool_executions"] = merged_executions
         self._record["elapsed_ms"] = round(elapsed, 1)
         self._record["llm_turns_count"] = len(self._record["llm_calls"])
-        self._record["tool_executions_count"] = len(self._tool_runs)
+        self._record["tool_executions_count"] = len(merged_executions)
 
         # Final response
         self._record["final_response_preview"] = str(out_dict.get("answer", ""))[:500]
@@ -214,7 +226,7 @@ class InvocationLoggingHandler(BaseCallbackHandler):
     # ── bridge: as AgentMiddleware for deepagents ─────────────────────────
 
     @classmethod
-    def as_middleware(cls, log_dir: str = "data/logs") -> AgentMiddleware:
+    def as_middleware(cls, log_dir: str | None = None) -> AgentMiddleware:
         """Return an AgentMiddleware that delegates to this handler.
 
         Use when you want the same logging for deepagents invocations::
@@ -233,10 +245,8 @@ class InvocationLoggingHandler(BaseCallbackHandler):
                     if hasattr(m, "type") and m.type == "human":
                         user_input = str(getattr(m, "content", ""))
                         break
-                tid = ""
-                cfg = getattr(runtime, "config", {}) or {}
-                if isinstance(cfg, dict):
-                    tid = cfg.get("configurable", {}).get("thread_id", "")
+                config = get_config()
+                tid = config.get("configurable", {}).get("thread_id", "")
                 handler.on_chain_start(
                     {}, {"user_input": user_input},
                     run_id=UUID(int=0), metadata={"thread_id": tid},
@@ -247,28 +257,67 @@ class InvocationLoggingHandler(BaseCallbackHandler):
                 return self.before_agent(state, runtime)
 
             def after_agent(self, state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
-                # Gather tool messages + final response
-                tool_outputs = {}
-                for msg in state.get("messages", []):
-                    if isinstance(msg, ToolMessage):
-                        tool_outputs[getattr(msg, "tool_call_id", "")] = str(getattr(msg, "content", ""))[:500]
-                # Update tool runs
-                for r in handler._tool_runs.values():
-                    for tc_id, out in tool_outputs.items():
-                        if not r["output"]:
-                            r["output"] = out
-                            break
-                # Final response
+                self._collect_from_state(state)
                 answer = ""
+                # 优先找最后一条无 tool_calls 的 AIMessage（LLM 最终回复）
                 for msg in reversed(state.get("messages", [])):
-                    if isinstance(msg, AIMessage) and not getattr(msg, "tool_calls", None):
-                        answer = str(getattr(msg, "content", ""))
-                        break
+                    if isinstance(msg, AIMessage):
+                        tc = getattr(msg, "tool_calls", None) or []
+                        if not tc and getattr(msg, "content", ""):
+                            answer = str(getattr(msg, "content", ""))
+                            break
+                # 回退：取最后一条有内容的 ToolMessage（工具直接产出）
+                if not answer:
+                    for msg in reversed(state.get("messages", [])):
+                        if isinstance(msg, ToolMessage) and getattr(msg, "content", ""):
+                            answer = str(getattr(msg, "content", ""))[:2000]
+                            break
                 handler.on_chain_end({"answer": answer, "messages": state.get("messages", [])}, run_id=UUID(int=0))
                 return None
 
             async def aafter_agent(self, state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
                 return self.after_agent(state, runtime)
+
+            @staticmethod
+            def _collect_from_state(state: AgentState) -> None:
+                """从 state.messages 中提取 LLM 调用和工具执行记录。"""
+                msgs = state.get("messages", [])
+                seen_tc_ids: set[str] = set()
+
+                for i, msg in enumerate(msgs):
+                    msg_type = type(msg).__name__
+                    if isinstance(msg, AIMessage):
+                        tc_list = getattr(msg, "tool_calls", None) or []
+                        tc_names = [tc.get("name", "?") for tc in tc_list]
+                        handler._record.setdefault("llm_calls", []).append({
+                            "run_id": str(getattr(msg, "id", "")),
+                            "messages_count": 1,
+                            "content_preview": str(getattr(msg, "content", ""))[:300],
+                            "content_length": len(str(getattr(msg, "content", ""))),
+                            "tool_calls_requested": tc_names,
+                        })
+                        # Collect tool results matching this AIMessage's tool_calls
+                        for tc in tc_list:
+                            tc_id = tc.get("id", "")
+                            seen_tc_ids.add(tc_id)
+                            output = ""
+                            for j in range(i + 1, len(msgs)):
+                                fm = msgs[j]
+                                if hasattr(fm, "tool_call_id") and getattr(fm, "tool_call_id", "") == tc_id:
+                                    output = str(getattr(fm, "content", ""))[:500]
+                                    break
+                            handler._record.setdefault("tool_executions", []).append({
+                                "name": tc.get("name", "?"),
+                                "input": json.dumps(tc.get("args", {}) if isinstance(tc, dict) else {}, ensure_ascii=False)[:500],
+                                "output": output[:500],
+                            })
+                    elif hasattr(msg, "tool_call_id") and getattr(msg, "tool_call_id", "") not in seen_tc_ids:
+                        handler._record.setdefault("tool_executions", []).append({
+                            "name": getattr(msg, "name", "?"),
+                            "input": "",
+                            "output": str(getattr(msg, "content", ""))[:500],
+                        })
+
 
         return _Bridge()
 

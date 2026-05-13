@@ -119,7 +119,7 @@ classify each section into the appropriate entity type.
 Only classify sections — do NOT generate IDs or foreign keys. Those are added downstream."""
 
 
-def _build_classify_prompt(sections: list[dict[str, Any]]) -> str:
+def _build_classify_prompt(sections: list[dict[str, Any]]) -> tuple[str, str]:
     sections_json = json.dumps(sections, ensure_ascii=False, indent=2)
     entity_descs = "\n".join(
         f"- {tn}: {desc}" for tn, desc in _entity_type_descriptions().items()
@@ -144,21 +144,25 @@ async def _classify_group(
 
     async with sem:
         try:
+            print(f"[extract_entities] 分组 {index+1}/{total} '{heading}' ({len(sections)} 节): 调用 LLM...")
             llm = get_llm("default", temperature=0.0)
             response = await llm.ainvoke([
                 SystemMessage(content=system_text),
                 HumanMessage(
                     content=f"Classify the {len(sections)} sections in group {index + 1}/{total} "
-                    f"\"{heading}\" and return a JSON array."
+                    f"\"{heading}\" and return a JSON array.\n\n"
+                    f"## Sections to classify\n\n{sections_json}"
                 ),
             ])
             content = _extract_text(response)
             parsed = _parse_json_response(content)
+            print(f"[extract_entities] 分组 {index+1}/{total} '{heading}': LLM 返回, {len(parsed) if isinstance(parsed, list) else '?'} 条结果")
             if isinstance(parsed, list):
                 return parsed
             return []
         except Exception as exc:
             logger.warning("[EntityExtract] Group %d LLM failed: %s", index, exc)
+            print(f"[extract_entities] 分组 {index+1}/{total} '{heading}': LLM 失败 — {exc}")
             return []
 
 
@@ -307,13 +311,18 @@ async def extract_entities(llm_structure_json: str) -> str:
     if not groups:
         return json.dumps({"error": "No groups found in llm_structure"}, ensure_ascii=False)
 
-    sem = asyncio.Semaphore(3)  # Limit concurrent LLM calls
+    print(f"[extract_entities] 开始 LLM 分类, {len(groups)} 个分组: "
+          f"{[g['heading'] for g in groups]}")
+
+    sem = asyncio.Semaphore(6)  # Limit concurrent LLM calls
 
     tasks = [
         _classify_group(g["sections"], g["heading"], i, len(groups), sem)
         for i, g in enumerate(groups)
     ]
+    print(f"[extract_entities] 并发调用 LLM ({len(tasks)} 个任务, 最多 3 并发)...")
     results = await asyncio.gather(*tasks, return_exceptions=True)
+    print(f"[extract_entities] LLM 分类完成")
 
     groups_data: list[tuple[list[dict[str, Any]], list[dict[str, Any]]]] = []
     for i, result in enumerate(results):

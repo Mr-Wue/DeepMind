@@ -1,0 +1,1 @@
+"""DeepMind UI 模块 — Chainlit 事件流适配。"""

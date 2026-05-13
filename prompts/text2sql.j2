@@ -3,12 +3,20 @@
 【数据库结构】
 {schema}
 
-【中文筛选（覆盖子问题里错误的 name 写法）】
-中文业务词筛数据表时用 **description LIKE '%…%'**（如表含 description 列）；禁止单独 **name LIKE '%中文%'**。子问题写错列名时按上表注释纠正。
+【JOIN 规则】
+- 需求模型(requirement_models)包含需求项(requirement_items)，JOIN ON ri.rm_id = rm.id
+- 产品需求(product_requirements)是另一张表，通过 rm_id→requirement_models 关联需求模型
+- product_requirements 和 requirement_items 都通过 rm_id 关联 requirement_models，但它们之间**不直接 JOIN**
+- 用户问「需求模型下有哪些需求项」→ 查 requirement_items JOIN requirement_models，不是 product_requirements
+- 「产品需求」= product_requirements 表，「需求项」/「用户需求项」= requirement_items 表
+- 多表 JOIN 时必须用 **表别名.列名**，禁止无前缀的列名
+
+【中文筛选】
+中文业务词筛数据表时用 **name LIKE '%…%'**。
 
 【SELECT 与表范围】
 - 仅 SELECT；JOIN 跨表；LIMIT 默认 100（用户未另指定时）。
-- 多表时各表 id 必须 **AS 语义别名**（如 p.id AS project_id），禁止无别名的多列 id。
+- 多表时各表 id 必须 **AS 语义别名**（如 p.id AS product_id），禁止无别名的多列 id。
 - 多表 JOIN 禁止 `SELECT a.*, b.*`（同名列会覆盖）；需某表全列时按 schema **逐列写** `别名.列 AS 表前缀_列名`。
 - **仅 FROM 单表且无 JOIN** 时可用 `SELECT t.*`。
 - **全字段/全部信息/所有列**：子问题一旦出现上述含义，对涉及的**每张目标表**必须把 schema 中该表**全部列**选入 SELECT（含外键如 app_id、project_id、auto_detected 等），禁止只写 id+name+description。多表 JOIN 时对每张要「全字段」的表逐列列齐；勿省略列。

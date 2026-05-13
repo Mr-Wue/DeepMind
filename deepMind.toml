@@ -1,0 +1,52 @@
+# DeepMind 全局配置
+
+[user]
+default_id = "default"
+default_name = "默认用户"
+
+# ── 数据目录（磁盘路径） ──────────────────────────────────────
+# 默认放在项目外 ../data/，与 CodeMind 共享数据目录。
+# 设 "." 表示项目内 ./data/
+[data]
+dir = "../data"
+
+# ── 长期记忆（跨会话 .md 文件，按用户隔离）────────────────────
+# Agent 视角: /memories/...  (由 StoreBackend 持久化到 LangGraph Store)
+[memory.long_term]
+files = ["profile.md", "knowledge.md"]
+# Agent 启动时加载到 system prompt 的虚拟路径
+virtual_dir = "/memories/"
+
+# ── 临时记忆（同 thread 内有效）─────────────────────────────
+# Agent 视角: /thread/
+[memory.short_term]
+turns_dir = "/thread/turns/"
+summary_file = "/thread/summary.md"
+
+# ── Chainlit UI 显示配置 ──────────────────────────────────────
+# 工具/子 Agent 名称 → 用户可读的中文显示名 + emoji。
+# 新增工具时只需在此追加一行，无需改 Python 代码。
+
+[ui.display.nodes]
+"agent"     = "🤖 主 Agent 思考"
+"tools"     = "🔧 工具执行"
+"req-parse" = "📄 需求文档解析"
+
+[ui.display.tools]
+"query_reqmgmt"     = "📊 查询需求管理数据"
+"parse_docx_outline" = "📋 解析文档大纲"
+"extract_entities"   = "🔍 提取实体"
+"store_entities"     = "💾 存储实体到数据库"
+"web_search"         = "🌐 互联网搜索"
+"write_todos"        = "📝 更新任务规划"
+
+[ui.theme]
+welcome_message = """👋 欢迎使用 DeepMind！
+
+我可以帮你：
+- 📊 查询需求管理数据（产品、需求模型、需求项）
+- 📄 解析需求文档（.docx → 结构化入库）
+- 🌐 互联网搜索（实时信息）
+- 📋 任务规划与步骤追踪（复杂任务自动分解为待办清单）
+
+请输入你的问题或指令。"""

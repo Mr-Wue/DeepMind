@@ -1,0 +1,115 @@
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Collecting deepagents
+  Downloading https://mirrors.aliyun.com/pypi/packages/e8/f6/9698f98da72dfa8dc8e1d0f0542f2407a40a50cfdccf522fdb5cb43e39e2/deepagents-0.5.9-py3-none-any.whl (188 kB)
+     -------------------------------------- 188.1/188.1 kB 3.8 MB/s eta 0:00:00
+Collecting langchain-core<2.0.0,>=1.3.2 (from deepagents)
+  Downloading https://mirrors.aliyun.com/pypi/packages/0f/1a/86c38c27b81913a1c6c12448cab55defb5a1097c7dc9a4cea83f55477a2d/langchain_core-1.4.0-py3-none-any.whl (548 kB)
+     -------------------------------------- 548.1/548.1 kB 1.8 MB/s eta 0:00:00
+Collecting langsmith>=0.8.0 (from deepagents)
+  Downloading https://mirrors.aliyun.com/pypi/packages/98/a9/51e644c1f1dbc3dd7d22dfd6412eab206d538c81e024e4f287373544bdcb/langsmith-0.8.3-py3-none-any.whl (399 kB)
+     -------------------------------------- 399.0/399.0 kB 1.2 MB/s eta 0:00:00
+Collecting langchain<2.0.0,>=1.2.17 (from deepagents)
+  Downloading https://mirrors.aliyun.com/pypi/packages/59/20/959f6098c79158afe5aedce7de05c3700f10d293890ef9e5dace6c3ad94b/langchain-1.2.18-py3-none-any.whl (113 kB)
+     -------------------------------------- 113.6/113.6 kB 6.5 MB/s eta 0:00:00
+Collecting langchain-anthropic<2.0.0,>=1.4.3 (from deepagents)
+  Downloading https://mirrors.aliyun.com/pypi/packages/d3/55/482a1968c95275e8be6d8c1e53b54f0f7be0b8b155ce1608c947a95cf543/langchain_anthropic-1.4.3-py3-none-any.whl (50 kB)
+     ---------------------------------------- 50.4/50.4 kB 2.7 MB/s eta 0:00:00
+Collecting langchain-google-genai<5.0.0,>=4.2.2 (from deepagents)
+  Downloading https://mirrors.aliyun.com/pypi/packages/3c/5c/adf81d68ab89b4cf505e690f8c1956d11b5969c831c951c7b4b1b1818080/langchain_google_genai-4.2.2-py3-none-any.whl (67 kB)
+     ---------------------------------------- 67.6/67.6 kB ? eta 0:00:00
+Collecting wcmatch (from deepagents)
+  Downloading https://mirrors.aliyun.com/pypi/packages/eb/d8/0d1d2e9d3fabcf5d6840362adcf05f8cf3cd06a73358140c3a97189238ae/wcmatch-10.1-py3-none-any.whl (39 kB)
+Collecting langgraph<1.2.0,>=1.1.10 (from langchain<2.0.0,>=1.2.17->deepagents)
+  Downloading https://mirrors.aliyun.com/pypi/packages/80/07/057dc1aa7991115fca53f1fa6573a7cc0dd296c05360c672cc67fdb6245b/langgraph-1.1.10-py3-none-any.whl (173 kB)
+     -------------------------------------- 173.8/173.8 kB 5.3 MB/s eta 0:00:00
+Requirement already satisfied: pydantic<3.0.0,>=2.7.4 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from langchain<2.0.0,>=1.2.17->deepagents) (2.13.3)
+Collecting anthropic<1.0.0,>=0.96.0 (from langchain-anthropic<2.0.0,>=1.4.3->deepagents)
+  Downloading https://mirrors.aliyun.com/pypi/packages/f1/b2/74ff06762d005ecf1658929a292df0acb786d025f6a6c54fcb30e2dc7761/anthropic-0.101.0-py3-none-any.whl (753 kB)
+     -------------------------------------- 753.6/753.6 kB 1.6 MB/s eta 0:00:00
+Requirement already satisfied: jsonpatch<2.0.0,>=1.33.0 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from langchain-core<2.0.0,>=1.3.2->deepagents) (1.33)
+Collecting langchain-protocol>=0.0.14 (from langchain-core<2.0.0,>=1.3.2->deepagents)
+  Downloading https://mirrors.aliyun.com/pypi/packages/1d/7a/9c97a7b9cbe4c5dc6a44cdb1545450c28f0c8ce89b9c1f0ee7fbad896263/langchain_protocol-0.0.15-py3-none-any.whl (7.0 kB)
+Requirement already satisfied: packaging>=23.2.0 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from langchain-core<2.0.0,>=1.3.2->deepagents) (24.2)
+Requirement already satisfied: pyyaml<7.0.0,>=5.3.0 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from langchain-core<2.0.0,>=1.3.2->deepagents) (6.0.2)
+Requirement already satisfied: tenacity!=8.4.0,<10.0.0,>=8.1.0 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from langchain-core<2.0.0,>=1.3.2->deepagents) (9.0.0)
+Requirement already satisfied: typing-extensions<5.0.0,>=4.7.0 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from langchain-core<2.0.0,>=1.3.2->deepagents) (4.15.0)
+Requirement already satisfied: uuid-utils<1.0,>=0.12.0 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from langchain-core<2.0.0,>=1.3.2->deepagents) (0.14.1)
+Collecting filetype<2.0.0,>=1.2.0 (from langchain-google-genai<5.0.0,>=4.2.2->deepagents)
+  Downloading https://mirrors.aliyun.com/pypi/packages/18/79/1b8fa1bb3568781e84c9200f951c735f3f157429f44be0495da55894d620/filetype-1.2.0-py2.py3-none-any.whl (19 kB)
+Collecting google-genai<2.0.0,>=1.65.0 (from langchain-google-genai<5.0.0,>=4.2.2->deepagents)
+  Downloading https://mirrors.aliyun.com/pypi/packages/2d/b6/552d40e96da22921eb1fead7c14b00b5b5473a20e45959488660fab35ee2/google_genai-1.75.0-py3-none-any.whl (793 kB)
+     -------------------------------------- 793.7/793.7 kB 1.9 MB/s eta 0:00:00
+Requirement already satisfied: httpx<1,>=0.23.0 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from langsmith>=0.8.0->deepagents) (0.28.1)
+Requirement already satisfied: orjson>=3.9.14 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from langsmith>=0.8.0->deepagents) (3.11.7)
+Requirement already satisfied: requests-toolbelt>=1.0.0 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from langsmith>=0.8.0->deepagents) (1.0.0)
+Requirement already satisfied: requests>=2.0.0 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from langsmith>=0.8.0->deepagents) (2.32.3)
+Requirement already satisfied: xxhash>=3.0.0 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from langsmith>=0.8.0->deepagents) (3.6.0)
+Requirement already satisfied: zstandard>=0.23.0 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from langsmith>=0.8.0->deepagents) (0.25.0)
+Collecting bracex>=2.1.1 (from wcmatch->deepagents)
+  Downloading https://mirrors.aliyun.com/pypi/packages/9d/2a/9186535ce58db529927f6cf5990a849aa9e052eea3e2cfefe20b9e1802da/bracex-2.6-py3-none-any.whl (11 kB)
+Requirement already satisfied: anyio<5,>=3.5.0 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from anthropic<1.0.0,>=0.96.0->langchain-anthropic<2.0.0,>=1.4.3->deepagents) (4.13.0)
+Requirement already satisfied: distro<2,>=1.7.0 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from anthropic<1.0.0,>=0.96.0->langchain-anthropic<2.0.0,>=1.4.3->deepagents) (1.9.0)
+Collecting docstring-parser<1,>=0.15 (from anthropic<1.0.0,>=0.96.0->langchain-anthropic<2.0.0,>=1.4.3->deepagents)
+  Downloading https://mirrors.aliyun.com/pypi/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl (22 kB)
+Requirement already satisfied: jiter<1,>=0.4.0 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from anthropic<1.0.0,>=0.96.0->langchain-anthropic<2.0.0,>=1.4.3->deepagents) (0.12.0)
+Requirement already satisfied: sniffio in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from anthropic<1.0.0,>=0.96.0->langchain-anthropic<2.0.0,>=1.4.3->deepagents) (1.3.1)
+Collecting google-auth<3.0.0,>=2.48.1 (from google-auth[requests]<3.0.0,>=2.48.1->google-genai<2.0.0,>=1.65.0->langchain-google-genai<5.0.0,>=4.2.2->deepagents)
+  Downloading https://mirrors.aliyun.com/pypi/packages/ee/fc/2cdc74252746f547f81ff3f02d4d4234a3f411b5de5b61af97e633a060b9/google_auth-2.52.0-py3-none-any.whl (245 kB)
+     -------------------------------------- 245.6/245.6 kB 5.1 MB/s eta 0:00:00
+Requirement already satisfied: websockets<17.0,>=13.0.0 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from google-genai<2.0.0,>=1.65.0->langchain-google-genai<5.0.0,>=4.2.2->deepagents) (14.1)
+Requirement already satisfied: certifi in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from httpx<1,>=0.23.0->langsmith>=0.8.0->deepagents) (2024.8.30)
+Requirement already satisfied: httpcore==1.* in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from httpx<1,>=0.23.0->langsmith>=0.8.0->deepagents) (1.0.7)
+Requirement already satisfied: idna in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from httpx<1,>=0.23.0->langsmith>=0.8.0->deepagents) (3.10)
+Requirement already satisfied: h11<0.15,>=0.13 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from httpcore==1.*->httpx<1,>=0.23.0->langsmith>=0.8.0->deepagents) (0.14.0)
+Requirement already satisfied: jsonpointer>=1.9 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from jsonpatch<2.0.0,>=1.33.0->langchain-core<2.0.0,>=1.3.2->deepagents) (3.0.0)
+Requirement already satisfied: langgraph-checkpoint<5.0.0,>=2.1.0 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from langgraph<1.2.0,>=1.1.10->langchain<2.0.0,>=1.2.17->deepagents) (4.0.1)
+Collecting langgraph-prebuilt<1.1.0,>=1.0.12 (from langgraph<1.2.0,>=1.1.10->langchain<2.0.0,>=1.2.17->deepagents)
+  Downloading https://mirrors.aliyun.com/pypi/packages/69/ef/5ada0bef4013ef5ae53a0ca1de5736517f1076a54d313f156ca545ec65d5/langgraph_prebuilt-1.0.13-py3-none-any.whl (37 kB)
+Requirement already satisfied: langgraph-sdk<0.4.0,>=0.3.0 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from langgraph<1.2.0,>=1.1.10->langchain<2.0.0,>=1.2.17->deepagents) (0.3.12)
+Requirement already satisfied: annotated-types>=0.6.0 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from pydantic<3.0.0,>=2.7.4->langchain<2.0.0,>=1.2.17->deepagents) (0.7.0)
+Requirement already satisfied: pydantic-core==2.46.3 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from pydantic<3.0.0,>=2.7.4->langchain<2.0.0,>=1.2.17->deepagents) (2.46.3)
+Requirement already satisfied: typing-inspection>=0.4.2 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from pydantic<3.0.0,>=2.7.4->langchain<2.0.0,>=1.2.17->deepagents) (0.4.2)
+Requirement already satisfied: charset-normalizer<4,>=2 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from requests>=2.0.0->langsmith>=0.8.0->deepagents) (3.4.0)
+Requirement already satisfied: urllib3<3,>=1.21.1 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from requests>=2.0.0->langsmith>=0.8.0->deepagents) (2.2.3)
+Requirement already satisfied: pyasn1-modules>=0.2.1 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from google-auth<3.0.0,>=2.48.1->google-auth[requests]<3.0.0,>=2.48.1->google-genai<2.0.0,>=1.65.0->langchain-google-genai<5.0.0,>=4.2.2->deepagents) (0.4.1)
+Requirement already satisfied: cryptography>=38.0.3 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from google-auth<3.0.0,>=2.48.1->google-auth[requests]<3.0.0,>=2.48.1->google-genai<2.0.0,>=1.65.0->langchain-google-genai<5.0.0,>=4.2.2->deepagents) (45.0.6)
+Requirement already satisfied: ormsgpack>=1.12.0 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from langgraph-checkpoint<5.0.0,>=2.1.0->langgraph<1.2.0,>=1.1.10->langchain<2.0.0,>=1.2.17->deepagents) (1.12.2)
+Requirement already satisfied: cffi>=1.14 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from cryptography>=38.0.3->google-auth<3.0.0,>=2.48.1->google-auth[requests]<3.0.0,>=2.48.1->google-genai<2.0.0,>=1.65.0->langchain-google-genai<5.0.0,>=4.2.2->deepagents) (1.17.1)
+Requirement already satisfied: pyasn1<0.7.0,>=0.4.6 in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from pyasn1-modules>=0.2.1->google-auth<3.0.0,>=2.48.1->google-auth[requests]<3.0.0,>=2.48.1->google-genai<2.0.0,>=1.65.0->langchain-google-genai<5.0.0,>=4.2.2->deepagents) (0.6.1)
+Requirement already satisfied: pycparser in c:\users\mr.wu\appdata\local\programs\python\python312\lib\site-packages (from cffi>=1.14->cryptography>=38.0.3->google-auth<3.0.0,>=2.48.1->google-auth[requests]<3.0.0,>=2.48.1->google-genai<2.0.0,>=1.65.0->langchain-google-genai<5.0.0,>=4.2.2->deepagents) (2.22)
+Installing collected packages: filetype, langchain-protocol, docstring-parser, bracex, wcmatch, langsmith, google-auth, anthropic, langchain-core, langchain-anthropic, google-genai, langgraph-prebuilt, langchain-google-genai, langgraph, langchain, deepagents
+  Attempting uninstall: langsmith
+    Found existing installation: langsmith 0.7.22
+    Uninstalling langsmith-0.7.22:
+      Successfully uninstalled langsmith-0.7.22
+  Attempting uninstall: google-auth
+    Found existing installation: google-auth 2.36.0
+    Uninstalling google-auth-2.36.0:
+      Successfully uninstalled google-auth-2.36.0
+  Attempting uninstall: langchain-core
+    Found existing installation: langchain-core 1.2.22
+    Uninstalling langchain-core-1.2.22:
+      Successfully uninstalled langchain-core-1.2.22
+  Attempting uninstall: langgraph-prebuilt
+    Found existing installation: langgraph-prebuilt 1.0.8
+    Uninstalling langgraph-prebuilt-1.0.8:
+      Successfully uninstalled langgraph-prebuilt-1.0.8
+  Attempting uninstall: langgraph
+    Found existing installation: langgraph 1.1.3
+    Uninstalling langgraph-1.1.3:
+      Successfully uninstalled langgraph-1.1.3
+  Attempting uninstall: langchain
+    Found existing installation: langchain 0.3.14
+    Uninstalling langchain-0.3.14:
+      Successfully uninstalled langchain-0.3.14
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+langchain-community 0.3.8 requires langchain<0.4.0,>=0.3.8, but you have langchain 1.2.18 which is incompatible.
+langchain-community 0.3.8 requires langchain-core<0.4.0,>=0.3.21, but you have langchain-core 1.4.0 which is incompatible.
+langchain-community 0.3.8 requires langsmith<0.2.0,>=0.1.125, but you have langsmith 0.8.3 which is incompatible.
+langchain-openai 0.2.10 requires langchain-core<0.4.0,>=0.3.21, but you have langchain-core 1.4.0 which is incompatible.
+langchain-text-splitters 0.3.4 requires langchain-core<0.4.0,>=0.3.26, but you have langchain-core 1.4.0 which is incompatible.
+langchain-xai 0.1.0 requires langchain-core<0.4,>=0.3.18, but you have langchain-core 1.4.0 which is incompatible.
+Successfully installed anthropic-0.101.0 bracex-2.6 deepagents-0.5.9 docstring-parser-0.18.0 filetype-1.2.0 google-auth-2.52.0 google-genai-1.75.0 langchain-1.2.18 langchain-anthropic-1.4.3 langchain-core-1.4.0 langchain-google-genai-4.2.2 langchain-protocol-0.0.15 langgraph-1.1.10 langgraph-prebuilt-1.0.13 langsmith-0.8.3 wcmatch-10.1
+
+[notice] A new release of pip is available: 24.0 -> 26.1.1
+[notice] To update, run: python.exe -m pip install --upgrade pip

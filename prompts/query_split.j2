@@ -10,38 +10,38 @@
 非空时复用历史步骤，只追加新步骤，禁止重复已有查询。
 
 【拆解规则（按优先级，违反前面的为严重错误）】
-1. 【禁止扩展·最高优先级】只查用户**明确提到**的表。用户说"项目"→只查 projects，用户说"项目和模块"→只查 projects+modules。严禁沿外键链自动追加用户没提到的下游表（如 classes、methods、rules 等）。违反此条是最严重的错误。
-2. 中文业务词（订单、用户、微服务…）用 description LIKE，仅英文标识（order-service、User、controller）才用 name=
+1. 【禁止扩展·最高优先级】只查用户**明确提到**的表。用户说"产品"→只查 products，用户说"产品和需求模型"→只查 products+requirement_models。严禁沿外键链自动追加用户没提到的下游表。违反此条是最严重的错误。
+2. 中文业务词（安全保密、性能指标…）用 name LIKE，英文标识（prod-001、ri-001）也用 name=
 3. 用户说"全部信息/所有字段/详情"时才全字段查，否则只返回关联 id
 4. 1-2 张表 → 单步；仅当用户明确提到 3 张及以上表时才拆分，每步 ≤2 表，总共 ≤3 步
-5. 后步用前步 id 过滤，写清关联列名。biz_models.id 是主键，classes.biz_model_id 指向它
-6. 后步 SELECT 必须包含外键列（project_id、class_id、biz_model_id 等），确保可追溯
+5. 后步用前步 id 过滤，写清关联列名。如 requirement_models.id 是主键，requirement_items.rm_id 指向它
+6. 后步 SELECT 必须包含外键列（rm_id、product_id 等），确保可追溯
 
 【反例 — 最常见的严重错误】
-用户问：「有哪些微服务项目」
-→ 用户只提到了 projects（可能涉及 apps），**没有**提 modules、classes、methods、rules 等
+用户问：「安全保密指标需求模型下有哪些需求条目」
+→ 用户只提到了 requirement_models 和 requirement_items，**没有**提 products、product_requirements 等
 ✗ 错误做法（严禁）：
-  → 查 projects → 查 modules → 查 classes → 查 methods → 查 rules → …
+  → 查 products → 查 requirement_models → 查 requirement_items → 查 product_requirements → …
   沿着外键链把全库所有表都查了一遍
 ✓ 正确做法：
-  {{"intent":"domain_query","queries":["查 projects 全部字段，返回 id、name、type、description"]}}
+  {{"intent":"domain_query","queries":["查 name 含安全保密指标的 requirement_models，JOIN requirement_items(requirement_items.rm_id)，返回全部字段"]}}
   一步完成，只查用户关心的表
 
 【输出】仅一行 JSON：
 {{"intent":"domain_query","queries":["步骤1","步骤2"]}}
 {{"intent":"scene_mismatch","suggestion":"建议场景","queries":[]}}
 
-【示例1-单表】有哪些微服务项目
-→ {{"intent":"domain_query","queries":["查 projects 全部字段，返回 id、name、type、description"]}}
+【示例1-单表】列出所有产品
+→ {{"intent":"domain_query","queries":["查 products 全部字段，返回 id、name、description"]}}
 
-【示例2-两表关联】order-service 有哪些模块和类
-→ {{"intent":"domain_query","queries":["查 name=order-service 的 projects 及 modules(modules.project_id)，返回 project_id、module_id","用前步 module_id 查 classes(classes.module_id)，返回 class_id、name、type"]}}
+【示例2-两表关联】性能指标需求模型下有多少需求条目
+→ {{"intent":"domain_query","queries":["查 name 含性能指标的 requirement_models，JOIN requirement_items ON requirement_items.rm_id=requirement_models.id，返回 requirement_items 全部字段"]}}
 
-【示例3-中文多表】订单服务下所有模型和类
-→ {{"intent":"domain_query","queries":["查 description 含订单服务的 projects 及 biz_models(biz_models.project_id)，返回 project_id、biz_models.id","用前步 biz_models.id 查 classes(classes.biz_model_id)，返回 class_id、name、type"]}}
+【示例3-中文筛选】安全保密指标相关的产品需求
+→ {{"intent":"domain_query","queries":["查 name 含安全保密的 requirement_models，再查这些模型下的 product_requirements(product_requirements.rm_id) 全部字段"]}}
 
-【示例4-全字段多步】电商域应用有哪些工程和模型，要全部信息
-→ {{"intent":"domain_query","queries":["查 description 含电商域的 apps 全部字段","用前步 id 查 projects(projects.app_id)全部字段","用前步 project_id 查 biz_models(biz_models.project_id)全部字段"]}}
+【示例4-全字段多步】列出所有产品及其需求模型，要全部信息
+→ {{"intent":"domain_query","queries":["查 products 全部字段","用前步 product_id 查 requirement_models(requirement_models.product_id)全部字段"]}}
 
 【示例5-不匹配】帮我翻译论文
 → {{"intent":"scene_mismatch","suggestion":"翻译","queries":[]}}

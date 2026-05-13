@@ -17,7 +17,16 @@
       "Bash(pip install *)",
       "Bash(C:/Users/admin/.conda/envs/py312/python.exe *)",
       "mcp__docs-langchain__search_docs_by_lang_chain",
-      "mcp__docs-langchain__query_docs_filesystem_docs_by_lang_chain"
+      "mcp__docs-langchain__query_docs_filesystem_docs_by_lang_chain",
+      "Bash(.venv/Scripts/python *)",
+      "Bash(.venv/Scripts/pip install *)",
+      "Bash(where drawio *)",
+      "Read(//c/Program Files/draw.io/**)",
+      "Read(//c/Program Files \\(x86\\)/draw.io/**)",
+      "Read(//d/ai/data/memory/**)",
+      "Read(//d/ai/data/memory/default/**)",
+      "Bash(grep -v \"^$\")",
+      "Bash(PYTHONPATH=D:/ai/DeepMind .venv/Scripts/python tmp/test_stream.py)"
     ]
   }
 }

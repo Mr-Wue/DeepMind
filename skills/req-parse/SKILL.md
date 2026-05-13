@@ -1,48 +1,49 @@
 ---
 name: req-parse
-description: Parse requirement documents (.docx) to extract products, requirement models, and requirement items for database storage. Use when the user uploads or references a Word requirement document.
+description: 解析需求文档（.docx），提取产品、需求模型、需求项并存入数据库。当用户上传或引用 Word 需求文档时使用。
 allowed-tools: parse_docx_outline, extract_entities, store_entities
 ---
 
-## When to use
+## 适用场景
 
-- User uploads a requirement specification document (Word/.docx)
-- User asks to extract requirements from a document
-- User wants to store parsed requirements into the database
+- 用户上传需求规格文档（Word/.docx）
+- 用户要求从文档中提取需求
+- 用户希望将解析后的需求存入数据库
 
-## Steps
+## 工作步骤
 
-### 1. Parse the document structure
+### 1. 解析文档结构
 
-Use `parse_docx_outline` to extract the structured heading tree from the .docx file.
-Pass the file path from the user's message.
+使用 `parse_docx_outline` 从 .docx 文件中提取结构化标题树。
+传入用户消息中的文件路径。
 
-This returns:
-- `title`: Document title
-- `sections`: Full heading hierarchy with paragraphs
-- `stats`: Heading/paragraph counts
-- `llm_structure`: Pre-processed structure for entity extraction (flattened sections with IDs)
+返回内容：
+- `title`：文档标题
+- `sections`：完整标题层级及段落
+- `stats`：标题/段落统计
+- `llm_structure`：为实体提取预处理的扁平化节列表（含 ID）
 
-### 2. Extract entities
+### 2. 提取实体
 
-Call `extract_entities` with the `llm_structure` JSON from step 1.
-This uses LLM classification to map each section to the correct entity type
-(products, requirement_models, requirement_items).
+使用步骤 1 返回的 `llm_structure` JSON 调用 `extract_entities`。
+该工具通过 LLM 分类将每个节映射到正确的实体类型（产品、需求模型、需求项）。
 
-The tool handles:
-- Section → entity type classification
-- ID generation (PROD-001, RM-001, IR-001, etc.)
-- Foreign key relationships (RM→Product, IR→RM)
-- Original paragraph restoration
+工具负责：
+- 节 → 实体类型分类
+- ID 生成（PROD-001、RM-001、IR-001 等）
+- 外键关系建立（RM→Product、IR→RM）
+- 原始段落还原
 
-### 3. Store entities
+### 3. 存储实体
 
-Call `store_entities` with the `entities` JSON array from step 2.
-This writes all entities to the database using the proper ORM schema.
+使用步骤 2 返回的 `entities` JSON 数组调用 `store_entities`。
 
-Storage is idempotent — re-storing the same entities will not create duplicates.
+⚠️ **执行前会暂停等待用户确认** — 此时向用户展示即将入库的实体摘要（产品数、模型数、需求项数），等待用户批准后再实际写入。
 
-### 4. Confirm
+通过 ORM schema 将所有实体写入数据库。
 
-Report the summary to the user: how many products, requirement_models, and
-requirement_items were stored. Use the stats from step 2.
+存储具有幂等性 — 重复存储相同实体不会产生重复数据。
+
+### 4. 确认结果
+
+向用户报告汇总：存入了多少产品、需求模型、需求项。使用步骤 2 的统计数据。

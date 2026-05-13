@@ -1,3 +1,4 @@
+chainlit>=2.0.0
 deepagents>=0.5.0
 langchain-openai>=0.3.0
 langchain-core>=0.3.0
@@ -6,3 +7,4 @@ python-docx>=1.1.0
 python-dotenv>=1.0.0
 sqlalchemy>=2.0.0
 langgraph-checkpoint-sqlite>=2.0.0
+langchain-mcp-adapters>=0.1.0

@@ -32,7 +32,7 @@ def _get_agent_and_handler() -> tuple[Any, Any]:
         from agents.text2sql_agent import ReqMgmtText2SQLAgent
         from middleware.logging_middleware import InvocationLoggingHandler
         _agent_singleton = ReqMgmtText2SQLAgent(db_path=str(data_paths.reqmgmt_db()))
-        _handler_singleton = InvocationLoggingHandler(log_dir="data/logs")
+        _handler_singleton = InvocationLoggingHandler()
     return _agent_singleton, _handler_singleton
 
 
@@ -64,6 +64,10 @@ def create_sql_query_tool():
         """
         agent, handler = _get_agent_and_handler()
         result = await agent.query(query, callbacks=[handler])
-        return result.get("answer", "查询未返回结果")
+        answer = result.get("answer", "查询未返回结果")
+        sql = result.get("sql", "")
+        if sql:
+            answer += f"\n\n<details>\n<summary>🔍 生成的 SQL</summary>\n\n```sql\n{sql}\n```\n</details>"
+        return answer
 
     return query_reqmgmt

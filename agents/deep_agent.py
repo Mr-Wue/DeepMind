@@ -63,6 +63,7 @@ def create_deepmind_agent(config=None):
 
     from tools.sql_query import create_sql_query_tool
     from tools.web_search import create_web_search_tool
+    from tools.update_entities import update_entities, get_db_schema
 
     # ── LLM ─────────────────────────────────────────────────────────────
     from llm.base import get_llm
@@ -86,7 +87,7 @@ def create_deepmind_agent(config=None):
 
     agent = create_deep_agent(
         model=model,
-        tools=[query_reqmgmt, web_search],
+        tools=[query_reqmgmt, web_search, update_entities, get_db_schema],
         memory=get_long_term_memory_paths(),
         backend=config.backend,
         store=config.store,
@@ -99,6 +100,6 @@ def create_deepmind_agent(config=None):
 
     print(f"[DeepMind] Agent 创建完成  (model={model.model_name})")
     print(f"  长期记忆: {get_long_term_memory_paths()}")
-    print(f"  主工具:   [query_reqmgmt, web_search]")
+    print(f"  主工具:   [query_reqmgmt, web_search, update_entities, get_db_schema]")
     print(f"  子 Agent 'req-parse': [parse_docx_outline, extract_entities, store_entities]")
     return agent

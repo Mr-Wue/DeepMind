@@ -26,7 +26,8 @@
       "Read(//d/ai/data/memory/**)",
       "Read(//d/ai/data/memory/default/**)",
       "Bash(grep -v \"^$\")",
-      "Bash(PYTHONPATH=D:/ai/DeepMind .venv/Scripts/python tmp/test_stream.py)"
+      "Bash(PYTHONPATH=D:/ai/DeepMind .venv/Scripts/python tmp/test_stream.py)",
+      "Bash(.venv/Scripts/pip show *)"
     ]
   }
 }

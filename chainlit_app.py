@@ -14,8 +14,10 @@ DeepMind Chainlit 入口 — 基于 DeepAgent 的全功能 Chat UI。
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
+import uuid
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -24,28 +26,74 @@ if str(ROOT) not in sys.path:
 
 import chainlit as cl
 
+MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
+
 from agents.init import init_deepmind
 from agents.deep_agent import DeepMindContext, create_deepmind_agent
 from ui.interrupt import handle_interrupts
 from ui.streaming import (
-    EVT_CHAIN_START,
-    EVT_CHAIN_END,
-    EVT_TOOL_START,
-    EVT_TOOL_END,
-    EVT_LLM_STREAM,
-    EVT_LLM_END,
     WELCOME_MESSAGE,
-    get_display_name,
-    get_agent_name,
-    is_main_agent_stream,
-    is_mcp_internal_event,
-    is_todo_tool_event,
-    should_skip_as_step,
-    extract_tool_input,
-    extract_tool_output,
-    extract_todos_from_tool_input,
-    format_todo_checklist,
+    process_event_stream,
 )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 文件上传处理
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+def _get_element_name(element, fallback_path: str) -> str:
+    """获取元素的原始文件名，回退到路径 basename。"""
+    return getattr(element, "name", "") or Path(fallback_path).name
+
+
+async def _notify_file_too_large(filename: str) -> None:
+    """通知用户文件过大被跳过。"""
+    max_mb = MAX_FILE_SIZE // (1024 * 1024)
+    await cl.Message(
+        content=f"⚠️ 文件 `{filename}` 超过 {max_mb}MB 限制，已跳过。",
+        author="System",
+    ).send()
+
+
+async def _process_uploaded_elements(elements: list, thread_id: str) -> list[str]:
+    """处理 Chainlit 上传文件：拷贝到持久目录，保留原始文件名。
+
+    返回虚拟路径（相对于项目根目录，以 / 开头），兼容 deepagents 虚拟文件系统。
+    """
+    from utils.paths import data_paths, PROJECT_ROOT
+
+    # 必须用 upload_files_dir()（PROJECT_ROOT 下），而非 files_dir()（可能在外部 data_dir）
+    # 否则 deepagents 虚拟文件系统（根为 PROJECT_ROOT）无法访问
+    files_dir = data_paths.upload_files_dir()
+
+    session_id = f"{thread_id}_{str(uuid.uuid4())[:8]}"
+    session_dir = files_dir / session_id
+    session_dir.mkdir(parents=True, exist_ok=True)
+
+    file_paths: list[str] = []
+    for el in elements:
+        path = getattr(el, "path", "")
+        if not path:
+            continue
+
+        try:
+            file_size = Path(path).stat().st_size
+            if file_size > MAX_FILE_SIZE:
+                original_name = _get_element_name(el, path)
+                await _notify_file_too_large(original_name)
+                continue
+        except OSError:
+            continue
+
+        original_name = _get_element_name(el, path)
+        dest_path = session_dir / original_name
+        shutil.copy2(path, dest_path)
+        # 转为虚拟路径（deepagents FilesystemMiddleware 要求所有路径以 / 开头）
+        virtual_path = "/" + str(dest_path.relative_to(PROJECT_ROOT)).replace("\\", "/")
+        file_paths.append(virtual_path)
+
+    return file_paths
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -89,11 +137,7 @@ async def on_message(message: cl.Message):
     # ── 构建输入（含上传文件路径）───────────────────────────────────
     content = message.content
     if message.elements:
-        file_paths = []
-        for elem in message.elements:
-            path = getattr(elem, "path", None)
-            if path:
-                file_paths.append(str(path))
+        file_paths = await _process_uploaded_elements(message.elements, thread_id)
         if file_paths:
             paths_str = "\n".join(f"- {p}" for p in file_paths)
             content = f"{content}\n\n📎 用户上传的文件（真实磁盘路径）：\n{paths_str}"
@@ -120,123 +164,25 @@ async def on_message(message: cl.Message):
 
     try:
         # ── 事件流遍历 ───────────────────────────────────────────────
-        async for event in agent.astream_events(
-            input_data, config=run_config, version="v2", context=context,
-        ):
-            kind = event["event"]
-            agent_name = get_agent_name(event)
-
-            # ── 1. LLM Token 流式输出（主 Agent 回复）──
-            if kind == EVT_LLM_STREAM and is_main_agent_stream(event):
-                chunk = event["data"]["chunk"]
-                if hasattr(chunk, "content") and chunk.content:
-                    await msg.stream_token(chunk.content)
-
-            # ── 1b. LLM 调用结束 → 兜底（流式未产生 token 时用完整响应填充）──
-            elif kind == EVT_LLM_END and is_main_agent_stream(event):
-                output = event.get("data", {}).get("output", {})
-                content = ""
-                if hasattr(output, "content") and output.content:
-                    content = output.content
-                elif hasattr(output, "generations") and output.generations:
-                    gen = output.generations[0][0]
-                    content = str(getattr(gen, "text", ""))
-                if content and not msg.content:
-                    msg.content = content
-
-            # ── 2a. write_todos 工具调用开始 → 渲染 checklist ──
-            elif kind == EVT_TOOL_START and is_todo_tool_event(event):
-                todos = extract_todos_from_tool_input(event)
-                checklist = format_todo_checklist(todos)
-                if checklist:
-                    if todo_msg is None:
-                        # 第一次创建 todo，发送新消息
-                        todo_msg = cl.Message(content=checklist, author="📋 任务规划")
-                        await todo_msg.send()
-                    else:
-                        # 后续更新 todo，刷新已有消息
-                        todo_msg.content = checklist
-                        await todo_msg.update()
-
-            # ── 2b. write_todos 工具调用结束 → checklist 已在 TOOL_START 中更新 ──
-            elif kind == EVT_TOOL_END and is_todo_tool_event(event):
-                pass  # checklist 已在 TOOL_START 中渲染完成
-
-            # ── 2c. 其他工具调用开始 → 创建 Step ──
-            elif kind == EVT_TOOL_START and not should_skip_as_step(event):
-                display_name = get_display_name(event)
-                tool_input = extract_tool_input(event)
-                run_id = event.get("run_id", "")
-                parent_id = current_subagent_step.id if current_subagent_step else None
-
-                step = cl.Step(name=display_name, parent_id=parent_id)
-                step.input = tool_input
-                await step.send()
-                active_steps[run_id] = step
-
-            # ── 3. 其他工具调用结束 → 更新 Step 输出 ──
-            elif kind == EVT_TOOL_END and not should_skip_as_step(event):
-                run_id = event.get("run_id", "")
-                tool_output = extract_tool_output(event)
-
-                if run_id in active_steps:
-                    step = active_steps[run_id]
-                    step.output = tool_output
-                    await step.update()
-                    del active_steps[run_id]
-
-            # ── 4. 链/节点开始 → 创建 Step ──
-            elif kind == EVT_CHAIN_START:
-                node = event.get("metadata", {}).get("langgraph_node", "")
-                run_id = event.get("run_id", "")
-
-                # 子 Agent 开始 → 创建父 Step（后续工具 Step 嵌套在下面）
-                if agent_name and agent_name != current_subagent_name:
-                    display_name = get_display_name(event) or agent_name
-                    step = cl.Step(name=display_name)
-                    await step.send()
-                    active_steps[f"agent_{agent_name}"] = step
-                    current_subagent_step = step
-                    current_subagent_name = agent_name
-
-                # 工具执行节点
-                if node == "tools":
-                    display_name = get_display_name(event) or "🔧 工具执行"
-                    parent_id = current_subagent_step.id if current_subagent_step else None
-                    step = cl.Step(name=display_name, type="tool", parent_id=parent_id)
-                    await step.send()
-                    active_steps[f"node_{run_id}"] = step
-
-            # ── 5. 链/节点结束 → 更新 Step ──
-            elif kind == EVT_CHAIN_END:
-                node = event.get("metadata", {}).get("langgraph_node", "")
-                run_id = event.get("run_id", "")
-
-                # 工具节点结束
-                key = f"node_{run_id}"
-                if key in active_steps and node == "tools":
-                    step = active_steps[key]
-                    output_data = event.get("data", {}).get("output", "")
-                    if output_data:
-                        step.output = str(output_data)[:500]
-                    await step.update()
-                    del active_steps[key]
-
-                # 子 Agent 结束（model 节点结束表示该 Agent 的工作完成）
-                if agent_name and node == "model":
-                    key = f"agent_{agent_name}"
-                    if key in active_steps:
-                        step = active_steps[key]
-                        await step.update()
-                        del active_steps[key]
-                        current_subagent_step = None
-                        current_subagent_name = ""
+        todo_msg, current_subagent_step, current_subagent_name = await process_event_stream(
+            agent.astream_events(
+                input_data, config=run_config, version="v2", context=context,
+            ),
+            msg,
+            todo_msg,
+            active_steps,
+            current_subagent_step,
+            current_subagent_name,
+        )
 
         # ── 最终确认消息 ──
         await msg.update()
 
         # ── 中断处理 ───────────────────────────────────────────────────
-        await handle_interrupts(agent, run_config, context, msg)
+        todo_msg, current_subagent_step, current_subagent_name = await handle_interrupts(
+            agent, run_config, context, msg,
+            todo_msg, active_steps, current_subagent_step, current_subagent_name,
+        )
 
     except Exception as e:
         # ── 错误处理 ──

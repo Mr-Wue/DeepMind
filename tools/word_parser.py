@@ -21,6 +21,19 @@ from typing import Any
 from langchain_core.tools import tool
 
 
+def _resolve_path(file_path: str) -> Path:
+    """解析文件路径，兼容 deepagents 虚拟路径（以 / 开头）和绝对/相对路径。"""
+    from utils.paths import PROJECT_ROOT
+
+    path = Path(file_path)
+    if file_path.startswith("/") and not path.exists():
+        # deepagents 虚拟路径 → 相对于项目根目录解析
+        resolved = (PROJECT_ROOT / file_path.lstrip("/")).resolve()
+        if resolved.exists():
+            return resolved
+    return path
+
+
 def _normalize(text: str) -> str:
     return " ".join(text.split())
 
@@ -75,7 +88,8 @@ def extract_outline(
     """
     from docx import Document
 
-    doc = Document(file_path)
+    path = _resolve_path(file_path)
+    doc = Document(str(path))
 
     # Phase 1: collect all paragraphs with styles
     entries: list[dict[str, Any]] = []
@@ -377,7 +391,7 @@ def parse_docx_outline(file_path: str, heading_styles: str = "Heading") -> str:
                         Default \"Heading\". Use \"Heading,FAI\" for custom styles.
     """
     print(f"[parse_docx_outline] 读取文件: {file_path}")
-    path = Path(file_path)
+    path = _resolve_path(file_path)
     if not path.exists():
         return json.dumps({"error": f"File not found: {file_path}"}, ensure_ascii=False)
 

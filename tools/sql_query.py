@@ -41,26 +41,28 @@ def create_sql_query_tool():
 
     @tool
     async def query_reqmgmt(query: str) -> str:
-        """Query the requirements management database using natural language.
+        """使用自然语言查询需求管理数据库（只读）。
 
-        Use this tool when the user asks about:
-        - Products (产品): names, descriptions
-        - Requirement Models / RM (需求模型): user_requirement or product_requirement types
-        - Requirement Items / IR (用户需求项): titles, priorities, statuses
-        - Product Requirements / PR (产品需求项): structured requirements with parent-child hierarchy
-        - Statistics: counts, groupings, aggregations
+        此工具只能执行 SELECT 查询，不能进行增删改操作。
+        请勿尝试 INSERT、UPDATE、DELETE 或 DROP 等写操作。
 
-        The database contains products like "XX电商平台", requirement_models
-        like "用户管理模块" under each product, and requirement_items under
-        each model with fields like title, description, priority, status.
+        当用户询问以下内容时使用此工具：
+        - 产品（Products）：名称、描述等
+        - 需求模型（RM）：用户需求类型或产品需求类型
+        - 用户需求项（IR）：标题、优先级、状态等
+        - 产品需求项（PR）：具有父子层级关系的结构化需求
+        - 统计信息：数量、分组、聚合
+
+        数据库中包含类似"XX电商平台"的产品，每个产品下有类似"用户管理模块"
+        的需求模型，每个模型下有包含标题、描述、优先级、状态等字段的需求项。
 
         Args:
-            query: Natural language query in Chinese or English.
-                   E.g. "列出所有产品", "用户管理模块下有多少需求项",
+            query: 中文或英文的自然语言查询。
+                   例如："列出所有产品"、"用户管理模块下有多少需求项"、
                    "查询优先级为高的需求项"
 
         Returns:
-            Formatted markdown table with query results.
+            格式化的 Markdown 表格查询结果。
         """
         agent, handler = _get_agent_and_handler()
         result = await agent.query(query, callbacks=[handler])

@@ -78,3 +78,4 @@ async def cleanup_deepmind(config: DeepMindConfig) -> None:
     from memory import cleanup_memory
     if config.memory_ctx:
         await cleanup_memory(config.memory_ctx)
+

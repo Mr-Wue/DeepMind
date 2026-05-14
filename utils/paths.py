@@ -119,6 +119,12 @@ class DataPaths:
     def reqmgmt_db(self) -> Path:
         return self.subpath("reqmgmt", "reqmgmt.db")
 
+    def upload_files_dir(self) -> Path:
+        """上传文件暂存目录（在 PROJECT_ROOT 下，供 deepagents 虚拟文件系统访问）。"""
+        p = PROJECT_ROOT / "data" / "files"
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+
     def shared_docs_dir(self) -> Path:
         return PROJECT_ROOT / "docs"
 

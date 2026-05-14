@@ -9,6 +9,18 @@ from docx import Document
 from langchain_core.tools import tool
 
 
+def _resolve_path(file_path: str) -> Path:
+    """解析文件路径，兼容 deepagents 虚拟路径（以 / 开头）和绝对/相对路径。"""
+    from utils.paths import PROJECT_ROOT
+
+    path = Path(file_path)
+    if file_path.startswith("/") and not path.exists():
+        resolved = (PROJECT_ROOT / file_path.lstrip("/")).resolve()
+        if resolved.exists():
+            return resolved
+    return path
+
+
 @tool
 def read_docx(file_path: str) -> str:
     """Read a .docx file and return its content as structured markdown.
@@ -20,7 +32,7 @@ def read_docx(file_path: str) -> str:
     Args:
         file_path: Absolute or relative path to the .docx file.
     """
-    path = Path(file_path)
+    path = _resolve_path(file_path)
     if not path.exists():
         return f"Error: file not found: {file_path}"
 

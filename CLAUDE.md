@@ -5,11 +5,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 常用命令
 
 ```bash
+# 一键启动前后端 (FastAPI :8000 + Next.js :3000)
+python main.py
+
+# 单独启动后端
+.venv/Scripts/python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+
+# 单独启动前端
+cd frontend && npm run dev
+
+# 安装 Python 依赖
+.venv/Scripts/pip install -r requirements.txt
+
+# 安装前端依赖
+cd frontend && npm install
+
 # 运行 Text2SQL 单元测试
 .venv/Scripts/python tests/text2sql_reqmgmt_test.py
-
-# 安装依赖
-.venv/Scripts/pip install -r requirements.txt
 
 # 通过 pytest 运行单个测试
 .venv/Scripts/python -m pytest tests/test_deepagents_skill.py -v
@@ -21,14 +33,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 整体架构
 
-基于 `deepagents`（LangGraph Agent 框架）构建的**需求管理 Agent 系统**。入口文件为 `tests/scenario_test.py`。
+```
+┌──────────────────────────────────────────────────┐
+│  前端 (frontend/)                                  │
+│  Next.js 15 + CopilotKit v2 + shadcn/ui            │
+│  3 栏布局: TodoPanel | CopilotChat | ToolCallPanel │
+│  通过 /api/copilotkit 代理到后端 127.0.0.1:8000     │
+└──────────────────┬───────────────────────────────┘
+                   │ AG-UI 协议 (CopilotKitMiddleware)
+┌──────────────────┴───────────────────────────────┐
+│  后端 (main.py)                                    │
+│  FastAPI + LangGraph Agent + CopilotKit AG-UI      │
+│  Agent 名: "deepmind"                              │
+└──────────────────────────────────────────────────┘
+```
+
+基于 `deepagents`（LangGraph Agent 框架）构建的**需求管理 Agent 系统**。入口为 `python main.py`，一键启动前后端。
 
 ### Agent 拓扑（SubAgent 模式）
 
 ```
-Main Agent
+Main Agent ("deepmind")
 ├── tools: [query_reqmgmt, web_search]  # 自然语言 → SQL 数据库查询, 互联网搜索
-├── middleware: [InvocationLoggingHandler]
+├── middleware: [CopilotKitMiddleware, InvocationLoggingHandler, ContextMonitorMiddleware]
 └── subagents:
     └── "req-parse"                     # 持有文档解析工具 + skill
         ├── tools: [parse_docx_outline, extract_entities, store_entities]
@@ -36,7 +63,18 @@ Main Agent
 ```
 
 - **主 Agent 不能**直接调用文档解析工具 — 必须通过 `task()` 工具委托给 `req-parse` 子 Agent。这强制执行了工具-技能绑定。
-- 主 Agent 和子 Agent 共用同一个 `InvocationLoggingHandler` 中间件，输出结构化 JSON 日志。
+- `CopilotKitMiddleware` 将 LangGraph Agent 桥接到 AG-UI 协议，供前端 CopilotKit 消费。
+
+### 前端（`frontend/`）
+
+Next.js 15 应用，使用 CopilotKit v2 (`@copilotkit/react-core/v2`) 与后端通信：
+
+- **`app/layout.tsx`** — `CopilotKit` provider，`runtimeUrl="/api/copilotkit"`，`agent="deepmind"`
+- **`app/page.tsx`** — 3 栏布局: `TodoPanel` | `CopilotChat` | `ToolCallPanel` + `InterruptHandler`
+- **`app/api/copilotkit/route.ts`** — API Route Handler，将请求代理到后端 `127.0.0.1:8000/copilotkit`
+- **`components/TodoPanel.tsx`** — 左侧栏，通过 `useAgent({ agentId: "deepmind" })` 读取 `agent.state.todos`
+- **`components/ToolCallPanel.tsx`** — 右侧栏，从 `agent.messages` 中提取工具调用（AG-UI 格式：assistant 消息中的 `toolCalls` + tool 角色的 `toolCallId` 结果）
+- **`components/InterruptCard.tsx`** — 通过 `useInterrupt({ agentId: "deepmind" })` 处理 LangGraph `interrupt()`，渲染确认/取消卡片
 
 ### Text2SQL 流水线（`agents/text2sql/`）
 
@@ -104,11 +142,12 @@ Main Agent
 
 ### 中间件（`middleware/`）
 
-`InvocationLoggingHandler` — 双用途日志记录器：
-1. 作为 `BaseCallbackHandler` — 传入 LangGraph `ainvoke(config={"callbacks": [handler]})`
-2. 作为 `AgentMiddleware` — 使用 `.as_middleware()` 适配 deepagents
-
-将调用记录以 JSON 格式写入 `data/logs/<thread_id>_<timestamp>.json`，包含 LLM 调用次数、工具执行、耗时和错误信息。
+- **`CopilotKitMiddleware`** — 将 LangGraph Agent 接入 AG-UI 协议，使前端 CopilotKit 可通过标准化事件流与 Agent 通信。
+- **`InvocationLoggingHandler`** — 双用途日志记录器：
+  1. 作为 `BaseCallbackHandler` — 传入 LangGraph `ainvoke(config={"callbacks": [handler]})`
+  2. 作为 `AgentMiddleware` — 使用 `.as_middleware()` 适配 deepagents
+  将调用记录以 JSON 格式写入 `data/logs/<thread_id>_<timestamp>.json`，包含 LLM 调用次数、工具执行、耗时和错误信息。
+- **`ContextMonitorMiddleware`** — 上下文监控。
 
 ### 技能
 

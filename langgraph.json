@@ -1,0 +1,6 @@
+{
+  "graphs": {
+    "deepmind": "./graphs/deepmind.py:graph"
+  },
+  "env": ".env"
+}

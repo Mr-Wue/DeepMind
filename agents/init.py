@@ -54,9 +54,14 @@ async def init_deepmind() -> DeepMindConfig:
     print("[DeepMind] 数据库初始化完成")
 
     # 中间件
-    from middleware.logging_middleware import InvocationLoggingHandler
+    from copilotkit import CopilotKitMiddleware
+    from middleware import ContextMonitorMiddleware, InvocationLoggingHandler
 
-    middleware = MiddlewareList([InvocationLoggingHandler.as_middleware()])
+    middleware = MiddlewareList([
+        CopilotKitMiddleware(),
+        InvocationLoggingHandler.as_middleware(),
+        ContextMonitorMiddleware(),
+    ])
 
     # 记忆（一站式: Store + Checkpointer + setup + seed）
     from memory import init_memory, create_memory_backend
